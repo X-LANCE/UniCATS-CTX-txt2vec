@@ -11,12 +11,6 @@ from ctx_text2vec.distributed.distributed import is_primary
 import torch.utils.tensorboard as tensorboard
 
 
-# USE_TENSORBOARD = True
-# try:
-#     import tensorboard
-# except:
-#     USE_TENSORBOARD = False
-
 class Logger(object):
     def __init__(self, args):
         self.args = args

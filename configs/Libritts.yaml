@@ -1,10 +1,10 @@
 # Finetune VQ-Diffusion-F on coco dataset
 model:
-  target: ctx_text2vec.modeling.models.dalle.DALLE
+  target: ctx_text2vec.modeling.models.text2vec.Text2Vec
   params:
 
     diffusion_config:      
-      target: ctx_text2vec.modeling.transformers.diffusion_transformer.DiffusionTransformer
+      target: ctx_text2vec.modeling.transformers.text2vec_transformer.Text2VecTransformer
       params:
         diffusion_step: 100
         ctt_T: 0.89999
@@ -15,13 +15,13 @@ model:
         num_cls: 23633
 
         transformer_config:
-          target: ctx_text2vec.modeling.transformers.transformer_utils.Text2VecTransformer
+          target: ctx_text2vec.modeling.transformers.transformer_utils.DiffusionTransformer
           params:
             codebook_path: feats/vqidx/codebook.npy
             label2vqidx_path: feats/vqidx/label2vqidx
             attn_type: 'selfcross'
             n_layer: 12
-            n_embd: 512 # the dim of embedding dims
+            n_embd: 512 # the dimension of embedding dims
             condition_dim: 384
             n_head: 8
             attn_pdrop: 0.0

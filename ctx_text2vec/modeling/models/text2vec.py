@@ -14,7 +14,7 @@ import numpy as np
 import os
 
 
-class DALLE(nn.Module):
+class Text2Vec(nn.Module):
     def __init__(
             self,
             diffusion_config
@@ -29,27 +29,23 @@ class DALLE(nn.Module):
     def generate(self, sample_type, *args):
         if len(sample_type.split(',')) > 1:
             if sample_type.split(',')[1][:1] == 'q':
-                self.transformer.p_sample = self.p_sample_with_truncation(self.transformer.p_sample,
-                                                                          sample_type.split(',')[1])
+                self.transformer.p_sample = self.p_sample_with_truncation(self.transformer.p_sample, sample_type.split(',')[1])
         if sample_type.split(',')[0][:3] == "top":
-            self.transformer.predict_start = self.predict_start_with_truncation(self.transformer.predict_start,
-                                                                                sample_type.split(',')[0])
+            self.transformer.predict_start = self.predict_start_with_truncation(self.transformer.predict_start, sample_type.split(',')[0])
         return self.transformer.sample(*args)
 
     def set_generate_type(self, sample_type):
         if len(sample_type.split(',')) > 1:
             if sample_type.split(',')[1][:1] == 'q':
-                self.transformer.p_sample = self.p_sample_with_truncation(self.transformer.p_sample,
-                                                                          sample_type.split(',')[1])
+                self.transformer.p_sample = self.p_sample_with_truncation(self.transformer.p_sample, sample_type.split(',')[1])
         if sample_type.split(',')[0][:3] == "top":
-            self.transformer.predict_start = self.predict_start_with_truncation(self.transformer.predict_start,
-                                                                                sample_type.split(',')[0])
+            self.transformer.predict_start = self.predict_start_with_truncation(self.transformer.predict_start, sample_type.split(',')[0])
 
     def predict_start_with_truncation(self, func, sample_type):
         if sample_type[-1] == 'p':
             truncation_k = int(sample_type[:-1].replace('top', ''))
-            content_codec = self.content_codec
-            save_path = self.this_save_path
+            # content_codec = self.content_codec
+            # save_path = self.this_save_path
 
             def wrapper(*args, **kwards):
                 out = func(*args, **kwards)
@@ -82,9 +78,5 @@ class DALLE(nn.Module):
         else:
             print("wrong sample type")
 
-    def forward(
-            self,
-            batch,
-            **kwargs
-    ):
+    def forward(self, batch, **kwargs):
         return self.transformer(batch['label'][0], batch['feat_len'][0], batch['text'][0], batch['text_len'][0], batch['duration'][0], **kwargs)

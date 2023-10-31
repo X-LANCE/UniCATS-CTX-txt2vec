@@ -20,7 +20,7 @@ from ctx_text2vec.modeling.transformers.espnet_nets.transformer.multi_layer_conv
 from ctx_text2vec.modeling.transformers.espnet_nets.transformer.positionwise_feed_forward import (
     PositionwiseFeedForward,  # noqa: H301
 )
-from ctx_text2vec.modeling.transformers.espnet_nets.transformer import repeat
+from ctx_text2vec.modeling.transformers.espnet_nets.transformer.repeat import repeat
 from ctx_text2vec.modeling.transformers.espnet_nets.transformer.subsampling import Conv2dSubsampling, Conv2dSubsampling6, Conv2dSubsampling8
 
 

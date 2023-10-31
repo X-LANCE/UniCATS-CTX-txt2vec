@@ -6,7 +6,7 @@ import torch.nn.functional as F
 import numpy as np
 from einops import rearrange
 
-from torch.utils.checkpoint import checkpoint
+from torch.utils.checkpoint import checkpoint as checkpoint_fn
 from ctx_text2vec.modeling.transformers.espnet_nets.transformer.embedding import ScaledPositionalEncoding
 
 
@@ -225,18 +225,9 @@ class Block(nn.Module):
                 attn_pdrop=attn_pdrop,
                 resid_pdrop=resid_pdrop,
             )
-            # self.attn2 = CrossAttention(
-            #         n_embd=n_embd,
-            #         condition_embd=condition_dim,
-            #         n_head=n_head,
-            #         attn_pdrop=attn_pdrop,
-            #         resid_pdrop=resid_pdrop,
-            #         )
+
             self.attn2 = nn.Linear(condition_dim, n_embd)
-            # if 'adalayernorm' in timestep_type:
-            #     self.ln1_1 = AdaLayerNorm(n_embd, diffusion_step, timestep_type)
-            # else:
-            #     print("timestep_type wrong")
+
         else:
             print("attn_type error")
         assert activate in ['GELU', 'GELU2']
@@ -307,7 +298,7 @@ class Conv_MLP(nn.Module):
         return self.dropout(x)
 
 
-class Text2VecTransformer(nn.Module):
+class DiffusionTransformer(nn.Module):
     def __init__(
             self,
             codebook_path,
@@ -448,13 +439,6 @@ class Text2VecTransformer(nn.Module):
             cond_emb,
             t, mask=None
     ):
-        # if len(input.shape) == 2:
-        #     emb = self.content_emb(input)
-        # else:
-        #     assert len(input.shape) == 3
-        #     input = input.transpose(1, 2)
-        #     emb = torch.matmul(input, self.content_emb.weight.data)
-
         emb = self.content_emb(x_t)
         emb += self.context_indicator(context_indicator)
         emb = self.content_emb_proj(emb)
@@ -464,7 +448,7 @@ class Text2VecTransformer(nn.Module):
             if self.use_checkpoint == False:
                 emb, att_weight = self.blocks[block_idx](emb, cond_emb, t, mask)  # B x (Ld+Lt) x D, B x (Ld+Lt) x (Ld+Lt)
             else:
-                emb, att_weight = checkpoint(self.blocks[block_idx], emb, cond_emb, t, mask)
+                emb, att_weight = checkpoint_fn(self.blocks[block_idx], emb, cond_emb, t, mask)
         logits = self.to_logits(emb)  # B x (Ld+Lt) x n
         out = rearrange(logits, 'b l c -> b c l')
         return out

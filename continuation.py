@@ -15,9 +15,8 @@ device = "cuda"
 config = load_yaml_config(f'{expdir}/configs/config.yaml')
 model = build_model(config).to(device)
 ckpt = torch.load(f"{expdir}/checkpoint/last.pth")
-outdir = f"{expdir}/syn/{eval_set}/npy"
+outdir = f"{expdir}/syn/{eval_set}/feats"
 model.load_state_dict(ckpt["model"])
-
 
 lexicon = {}
 with open("data/lang_1phn/train_all_units.txt", 'r') as f:
@@ -56,9 +55,6 @@ with open(f"data/{eval_set}/utt2prompt_subset") as f:
     model.set_generate_type('top0.85r')
     for l in tqdm(f.readlines()):
         utt, prompt = l.strip().split(maxsplit=1)
-        # save_dir = f"{outdir}/{utt}.npy"
-        # if os.path.exists(save_dir):
-        #     continue
         text = utt2text[utt]
         text = torch.LongTensor([lexicon[w] for w in text.split()]).unsqueeze(0).to(device)
         prefix_text = torch.LongTensor([lexicon[w] for w in utt2text[prompt].split()]).unsqueeze(0).to(device)
@@ -70,9 +66,5 @@ with open(f"data/{eval_set}/utt2prompt_subset") as f:
         out = out[prefix_feat.size(-1):]
         vqid = vqid_table[out].float().cpu().numpy()
         feat_writer[utt] = vqid
-        # np.save(save_dir, vqid)
-        # if time.time() - last_time > 60:
-        #     break
-        # last_time = time.time()
 
 feat_writer.close()

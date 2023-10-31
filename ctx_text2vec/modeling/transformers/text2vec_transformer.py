@@ -79,7 +79,7 @@ def alpha_schedule(time_step, N=100, att_1=0.99999, att_T=0.000009, ctt_1=0.0000
     return at, bt, ct, att, btt, ctt
 
 
-class DiffusionTransformer(nn.Module):
+class Text2VecTransformer(nn.Module):
     def __init__(
             self,
             *,
@@ -127,12 +127,10 @@ class DiffusionTransformer(nn.Module):
         transformer_config['params']['diffusion_step'] = diffusion_step
         transformer_config['params']['num_cls'] = num_cls
         self.transformer = instantiate_from_config(transformer_config)
-        # self.content_seq_len = transformer_config['params']['content_seq_len']
         self.amp = False
 
         self.num_classes = num_cls
         self.loss_type = 'vb_stochastic'
-        # self.shape = transformer_config['params']['content_seq_len']
         self.num_timesteps = diffusion_step
         self.parametrization = 'x0'
         self.auxiliary_loss_weight = auxiliary_loss_weight
@@ -198,7 +196,8 @@ class DiffusionTransformer(nn.Module):
 
         return log_probs
 
-    def q_pred(self, log_x_start, t):  # q(xt|x0)
+    def q_pred(self, log_x_start, t):
+        # q(xt|x0)
         # log_x_start can be onehot or not
         t = (t + (self.num_timesteps + 1)) % (self.num_timesteps + 1)
         log_cumprod_at = extract(self.log_cumprod_at, t, log_x_start.shape)  # at~
@@ -216,9 +215,10 @@ class DiffusionTransformer(nn.Module):
 
         return log_probs
 
-    def predict_start(self, log_x_t, context_indicator, cond_emb, t, mask=None):  # p(x0|xt)
+    def predict_start(self, log_x_t, context_indicator, cond_emb, t, mask=None):
+        # p(x0|xt)
         x_t = log_onehot_to_index(log_x_t)
-        if self.amp == True:
+        if self.amp:
             with autocast():
                 out = self.transformer(x_t, context_indicator, cond_emb, t, mask)
         else:
@@ -236,7 +236,8 @@ class DiffusionTransformer(nn.Module):
 
         return log_pred
 
-    def q_posterior(self, log_x_start, log_x_t, t):  # p_theta(xt_1|xt) = sum(q(xt-1|xt,x0')*p(x0'))
+    def q_posterior(self, log_x_start, log_x_t, t):
+        # p_theta(xt_1|xt) = sum(q(xt-1|xt,x0')*p(x0'))
         # notice that log_x_t is onehot
         assert t.min().item() >= 0 and t.max().item() < self.num_timesteps
         batch_size = log_x_start.size()[0]
@@ -269,7 +270,8 @@ class DiffusionTransformer(nn.Module):
         log_EV_xtmin_given_xt_given_xstart = self.q_pred(q, t - 1) + log_qt_one_timestep + q_log_sum_exp
         return torch.clamp(log_EV_xtmin_given_xt_given_xstart, -70, 0)
 
-    def p_pred(self, log_x, cond_emb, t, prefix=None, suffix=None):  # if x0, first p(x0|xt), than sum(q(xt-1|xt,x0)*p(x0|xt))
+    def p_pred(self, log_x, cond_emb, t, prefix=None, suffix=None):
+        # if x0, first p(x0|xt), than sum(q(xt-1|xt,x0)*p(x0|xt))
 
         if prefix is not None:
             log_x[:, :, :prefix.size(-1)] = index_to_log_onehot(prefix, self.num_classes)
@@ -297,8 +299,8 @@ class DiffusionTransformer(nn.Module):
         return log_model_pred
 
     @torch.no_grad()
-    def p_sample(self, log_x, cond_emb, t, prefix=None,
-                 suffix=None):  # , schedule_decoding=False , use_classifier_free_guidance=True):               # sample q(xt-1) for next step from  xt, actually is p(xt-1|xt)
+    def p_sample(self, log_x, cond_emb, t, prefix=None, suffix=None):
+        # sample xt-1 for next step from xt, actually is p(xt-1|xt)
 
         # set context
         if prefix is not None:
@@ -316,48 +318,7 @@ class DiffusionTransformer(nn.Module):
         # calculate x_0
         log_x_recon = self.predict_start(log_x, context_indicator, cond_emb, t)
 
-        # # classifier-free guidance
-        # if use_classifier_free_guidance and ((prefix is not None) or (suffix is not None)):
-        #     log_x_uncond = log_x.detach()
-        #     cond_emb_uncond = cond_emb.detach()
-        #     if prefix is not None:
-        #         log_x_uncond = log_x_uncond[:, :, prefix.size(-1):]
-        #         cond_emb_uncond = cond_emb_uncond[:, prefix.size(-1):]
-        #     if suffix is not None:
-        #         log_x_uncond = log_x_uncond[:, :, :-suffix.size(-1)]
-        #         cond_emb_uncond = cond_emb_uncond[:, :-suffix.size(-1)]
-        #     context_indicator_uncond = torch.zeros(log_x_uncond.size(0), log_x_uncond.size(-1)).long().to(log_x_uncond.device)
-        #     log_x_recon_uncond = self.predict_start(log_x_uncond, context_indicator_uncond, cond_emb_uncond, t)
-        #     start = prefix.size(-1)
-        #     end = prefix.size(-1) + log_x_recon_uncond.size(-1)
-        #     guidance_factor = 0.01
-        #     log_x_recon[:, :, start:end] = (1 + guidance_factor) * log_x_recon[:, :, start:end] - guidance_factor *  log_x_recon_uncond
-
         if t > 0:
-            #            if schedule_decoding:
-            #
-            #                log_x_recon_ = log_x_recon
-            #                if prefix is not None:
-            #                    log_x_recon_ = log_x_recon_[:, :, prefix.size(-1):]
-            #                if suffix is not None:
-            #                    log_x_recon_ = log_x_recon_[:, :, :-suffix.size(-1)]
-            #
-            #                num_decoded_token = max(1, int((1 - t.item() / self.num_timesteps) * log_x_recon_.size(-1)))
-            #                max_prob, max_prob_token = torch.max(log_x_recon_, dim=1)
-            #                _, decoded_position = max_prob.topk(k=num_decoded_token, dim=1)
-            #                decoding_mask = torch.zeros_like(max_prob_token)
-            #                decoding_mask[:, decoded_position[0]] = 1
-            #                mask_token = torch.zeros_like(log_x_recon_[:, 0]) + self.num_classes - 1
-            #                out_token = ((1 - decoding_mask) * mask_token + decoding_mask * max_prob_token).long()
-            #
-            #                if prefix is not None:
-            #                    out_token = torch.cat([prefix, out_token], dim=1)
-            #                if suffix is not None:
-            #                    out_token = torch.cat([out_token, suffix], dim=1)
-            #
-            #                out = index_to_log_onehot(out_token, self.num_classes)
-            #
-            #            else:
 
             # calculate x_(t-1)
             model_log_prob = self.q_posterior(
@@ -450,13 +411,14 @@ class DiffusionTransformer(nn.Module):
         x_start = x_start.masked_select(~mask).unsqueeze(0)
         xt = xt.masked_select(~mask).unsqueeze(0)
         log_x_start = log_x_start.transpose(-1, -2).masked_select(~mask.unsqueeze(-1)).view(-1, log_x_start.size(1)).transpose(-1, -2).unsqueeze(0)
+
         log_xt = log_xt.transpose(-1, -2).masked_select(~mask.unsqueeze(-1)).view(-1, log_xt.size(1)).transpose(-1, -2).unsqueeze(0)
+
         log_x0_recon = log_x0_recon.transpose(-1, -2).masked_select(~mask.unsqueeze(-1)).view(-1, log_x0_recon.size(1)).transpose(-1, -2).unsqueeze(0)
-        log_model_prob = log_model_prob.transpose(-1, -2).masked_select(~mask.unsqueeze(-1)).view(-1, log_model_prob.size(1)).transpose(-1,
-                                                                                                                                        -2).unsqueeze(
-            0)
-        log_true_prob = log_true_prob.transpose(-1, -2).masked_select(~mask.unsqueeze(-1)).view(-1, log_true_prob.size(1)).transpose(-1,
-                                                                                                                                     -2).unsqueeze(0)
+
+        log_model_prob = log_model_prob.transpose(-1, -2).masked_select(~mask.unsqueeze(-1)).view(-1, log_model_prob.size(1)).transpose(-1, -2).unsqueeze(0)
+
+        log_true_prob = log_true_prob.transpose(-1, -2).masked_select(~mask.unsqueeze(-1)).view(-1, log_true_prob.size(1)).transpose(-1, -2).unsqueeze(0)
 
         ################## compute acc list ################
         x0_recon = log_onehot_to_index(log_x0_recon)
@@ -612,12 +574,7 @@ class DiffusionTransformer(nn.Module):
         self.amp = False
         return out
 
-    def sample(
-            self,
-            text,
-            prefix=None,
-            suffix=None,
-            return_logits=False):
+    def sample(self, text, prefix=None, suffix=None, return_logits=False):
 
         device = self.log_at.device
 
@@ -650,14 +607,6 @@ class DiffusionTransformer(nn.Module):
             cond_emb = self.length_regulator(hs, duration_hat)  # (B, Lmax, adim)
             batch_size, seq_len, _ = cond_emb.shape
 
-            # if schedule_decoding:
-            #     # use full mask init
-            #     z = torch.zeros(batch_size, seq_len, device=device) + (self.num_classes-1)
-            #     log_z = index_to_log_onehot(z, self.num_classes)
-            #     for diffusion_index in range(self.num_timesteps - 1, -1, -1):
-            #         t = torch.full((batch_size,), diffusion_index, device=device, dtype=torch.long)
-            #         log_z = self.p_sample(log_z, cond_emb, t, prefix_feat, suffix_feat, schedule_decoding=True)  # log_z is log_onehot
-            # else:
             t = torch.full((batch_size,), self.num_timesteps - 1, device=device, dtype=torch.long)
             x_start = torch.randint(0, self.num_classes - 1, size=(batch_size, seq_len), device=device)
             prefix_feat = None
@@ -670,7 +619,8 @@ class DiffusionTransformer(nn.Module):
             log_z = self.q_sample(log_x_start=log_x_start, t=t)
             for diffusion_index in range(self.num_timesteps - 1, -1, -1):
                 t = torch.full((batch_size,), diffusion_index, device=device, dtype=torch.long)
-                log_z = self.p_sample(log_z, cond_emb, t, prefix_feat, suffix_feat)  # , schedule_decoding=False)     # log_z is log_onehot
+                log_z = self.p_sample(log_z, cond_emb, t, prefix_feat, suffix_feat)
+                # log_z is log_onehot
 
         content_token = log_onehot_to_index(log_z)
 

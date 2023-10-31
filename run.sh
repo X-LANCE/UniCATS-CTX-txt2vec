@@ -23,5 +23,5 @@ eval_dir=$PWD/OUTPUT/Libritts/syn/${eval_set}
 voc_dir=/mnt/lustre/sjtu/home/cpd30/tools/ParallelWaveGAN/egs/libritts/v2w2
 
 awk 'NR==FNR{a[$1]=$2}NR>FNR{printf("%s %s\n", $1, a[$2])}' feats/normed_fbank/${eval_set}/feats.scp data/${eval_set}/utt2prompt_subset > ${eval_dir}/prompt.scp
-cd ${voc_dir}
+cd ${voc_dir} || exit
 bash local/generate.sh --conf conf/hifigan.v1.yaml --eval_dir ${eval_dir}

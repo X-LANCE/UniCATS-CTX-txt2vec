@@ -9,8 +9,6 @@ from ctx_text2vec.modeling.build import build_model
 device = "cuda"
 config = load_yaml_config('OUTPUT/Libritts/configs/config.yaml')
 model = build_model(config).to(device)
-# ckpt = torch.load("OUTPUT/LJ/checkpoint/000349e_256549iter.pth")
-# ckpt = torch.load("OUTPUT/LJ/checkpoint/000349e_256767iter.pth")
 ckpt = torch.load("OUTPUT/Libritts/checkpoint/last.pth")
 model.load_state_dict(ckpt["model"])
 
@@ -29,7 +27,7 @@ with open("feats/vqidx/label2vqidx", 'r') as f:
 vqid_table = torch.stack(vqid_table, dim=0).to(device)
 
 feat_writer = kaldiio.WriteHelper("ark,scp:{o}.ark,{o}.scp".format(o=os.path.join(os.getcwd(), "OUTPUT/Libritts/syn/feats")))
-with open("data/eval_all/text.subset") as f:
+with open("data/eval_all/text") as f:
     for l in tqdm(f.readlines()):
         utt, text = l.strip().split(maxsplit=1)
         text = torch.LongTensor([lexicon[w] for w in text.split()]).unsqueeze(0).to(device)

@@ -1,6 +1,5 @@
 import torch
 import math
-# from torch.optim import AdamW, Adam
 from torch import inf
 from torch.optim.optimizer import Optimizer
 

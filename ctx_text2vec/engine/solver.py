@@ -10,6 +10,7 @@ import time
 import math
 import torch
 import threading
+import matplotlib.pyplot as plt
 import multiprocessing
 import copy
 from torch.nn.utils import clip_grad_norm_, clip_grad_norm
@@ -215,9 +216,9 @@ class Solver(object):
                     # save images
                     im_grid = make_grid(im)
                     im_grid = im_grid.permute(1, 2, 0).to('cpu').numpy()
-                    im_grid = Image.fromarray(im_grid)
+                    plt.imshow(im_grid)
 
-                    im_grid.save(save_path + '.jpg')
+                    plt.savefig(save_path + '.jpg')
                     self.logger.log_info('save {} to {}'.format(k, save_path + '.jpg'))
                 else:  # may be other values, such as text caption
                     with open(save_path + '.txt', 'a') as f:
@@ -366,18 +367,6 @@ class Solver(object):
                 self.last_epoch = state_dict['last_epoch']
                 self.last_iter = state_dict['last_iter']
 
-            #            k_list = []
-            #            for k in state_dict['model'].keys():
-            #                if k.startswith('transformer.log_') or k.startswith('transformer.Lt_'):
-            #                    k_list.append(k)
-            #            for k in k_list:
-            #                state_dict['model'].pop(k)
-            #                state_dict['ema'].pop(k)
-            #            for i in range(12):
-            #                state_dict['model'].pop('transformer.transformer.blocks.'+str(i)+'.ln1_1.emb.weight')
-            #                state_dict['model'].pop('transformer.transformer.blocks.'+str(i)+'.ln1.emb.weight')
-            #                state_dict['ema'].pop('transformer.transformer.blocks.'+str(i)+'.ln1_1.emb.weight')
-            #                state_dict['ema'].pop('transformer.transformer.blocks.'+str(i)+'.ln1.emb.weight')
             if isinstance(self.model, torch.nn.parallel.DistributedDataParallel):
                 try:
                     self.model.module.load_state_dict(state_dict['model'])  # , strict=False)
@@ -471,15 +460,6 @@ class Solver(object):
                 self.logger.log_info(info)
 
             itr_start = time.time()
-
-            # # sample
-            # if self.sample_iterations > 0 and (self.last_iter + 1) % self.sample_iterations == 0:
-            #     # print("save model here")
-            #     # self.save(force=True)
-            #     # print("save model done")
-            #     self.model.eval()
-            #     self.sample(batch, phase='train', step_type='iteration')
-            #     self.model.train()
 
         # modify here to make sure dataloader['train_iterations'] is correct
         assert itr >= 0, "The data is too less to form one iteration!"

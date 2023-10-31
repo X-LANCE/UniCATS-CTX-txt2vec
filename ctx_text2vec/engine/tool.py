@@ -4,6 +4,7 @@ from types import FunctionType
 from typing import Union, List, Optional, Tuple, Any
 import math
 
+
 @torch.no_grad()
 def make_grid(
     tensor: Union[torch.Tensor, List[torch.Tensor]],

@@ -23,8 +23,6 @@ def launch(fn, n_gpu_per_machine, n_machine=1, machine_rank=0, dist_url=None, ar
     world_size = n_machine * n_gpu_per_machine
 
     if world_size > 1:
-        # if "OMP_NUM_THREADS" not in os.environ:
-        #     os.environ["OMP_NUM_THREADS"] = "1"
 
         if dist_url == "auto":
             if n_machine != 1:
