@@ -1,4 +1,3 @@
-# Finetune VQ-Diffusion-F on coco dataset
 model:
   target: ctx_text2vec.modeling.models.text2vec.Text2Vec
   params:

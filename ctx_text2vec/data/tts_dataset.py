@@ -3,10 +3,12 @@ import os
 import random
 import kaldiio
 import torch
+import logging
 
 
 class TTSDataset(Dataset):
-    def __init__(self, data_root, lexicon_path, batch_max_tokens):
+    def __init__(self, data_root, lexicon_path, batch_max_tokens, max_seconds=32, min_seconds=5, input_hz: int = 100):
+        logging.info(f"Constructing TTSDataset from {data_root}, {lexicon_path}")
         lexicon = {}
         with open(lexicon_path, 'r') as f:
             for line in f.readlines():
@@ -14,6 +16,7 @@ class TTSDataset(Dataset):
                 lexicon[txt_token] = int(token_id)
 
         self.feats = kaldiio.load_scp(os.path.join(data_root, 'feats.scp'))
+        logging.info(f"Registered {len(self.feats)} utterance features")
 
         self.text = {}
         self.duration = {}
@@ -21,29 +24,39 @@ class TTSDataset(Dataset):
             for l in f.readlines():
                 utt, text = l.strip().split(maxsplit=1)
                 self.text[utt] = [lexicon[w] for w in text.split()]
+        logging.info(f"Registered {len(self.text)} texts")
         with open(os.path.join(data_root, 'duration')) as f:
             for l in f.readlines():
                 utt, duration = l.strip().split(maxsplit=1)
                 self.duration[utt] = list(map(int, duration.split()))
+        logging.info(f"Registered {len(self.duration)} duration sequences")
 
+        max_frames = int(input_hz * max_seconds)
+        min_frames = int(input_hz * min_seconds)
         self.utt2num_frames = {}
         if os.path.exists(os.path.join(data_root, 'utt2num_frames')):
             with open(os.path.join(data_root, 'utt2num_frames')) as f:
                 for l in f.readlines():
                     utt, num_frames = l.strip().split(maxsplit=1)
                     num_frames = int(num_frames)
-                    if num_frames > 3200 or num_frames < 500:
+                    if num_frames > max_frames or num_frames < min_frames:
                         continue
                     self.utt2num_frames[utt] = num_frames
         else:
             for utt, feat in self.feats.items():
                 num_frames = feat.shape[0]
-                if num_frames > 3200 or num_frames < 500:
+                if num_frames > max_frames or num_frames < min_frames:
                     continue
                 self.utt2num_frames[utt] = num_frames
+        logging.info(f"Registered {len(self.utt2num_frames)} utterances within the length range")
 
-        self.utt_ids = sorted(list(set(self.feats.keys()) & set(self.text.keys()) & set(self.duration.keys()) & set(self.utt2num_frames.keys())),
+        self.utt_ids = sorted(list(set(self.feats.keys()) &
+                                   set(self.text.keys()) &
+                                   set(self.duration.keys()) &
+                                   set(self.utt2num_frames.keys())),
                               key=lambda x: self.utt2num_frames[x])
+        logging.info(f"Finally {len(self.utt_ids)} utterances will be used for training")
+
         self.batches = self.batchfy(batch_max_tokens)
 
     def batchfy(self, batch_max_tokens):

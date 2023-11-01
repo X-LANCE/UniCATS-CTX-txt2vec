@@ -1,8 +1,6 @@
 import torch
-# from ctx_text2vec.data.base_dataset import ConcatDatasetWithIndex as ConcatDataset
 from torch.utils.data import ConcatDataset
 from ctx_text2vec.utils.misc import instantiate_from_config
-from ctx_text2vec.distributed.distributed import is_distributed
 
 
 def build_dataloader(config, args=None, return_dataset=False):

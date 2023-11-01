@@ -6,6 +6,8 @@ import os
 import time
 import sys
 import torch
+import logging
+
 from ctx_text2vec.utils.io import write_args, save_config_to_yaml
 from ctx_text2vec.distributed.distributed import is_primary
 import torch.utils.tensorboard as tensorboard
@@ -42,7 +44,7 @@ class Logger(object):
 
     def log_info(self, info, check_primary=True):
         if self.is_primary or (not check_primary):
-            print(info)
+            logging.info(info)
             if self.is_primary:
                 info = str(info)
                 time_str = time.strftime('%Y-%m-%d-%H-%M')

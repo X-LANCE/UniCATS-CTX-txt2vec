@@ -5,8 +5,8 @@ import numpy as np
 import sys
 
 dict_path = sys.argv[1]
-vqidx_rspecifier= sys.argv[2]
-label_wspecifier= sys.argv[3]
+vqidx_rspecifier = sys.argv[2]
+label_wspecifier = sys.argv[3]
 
 vqidx2label = {}
 with open(dict_path, 'r') as f:
@@ -29,4 +29,3 @@ for utt_id, feat in vqidx_reader:
 
 vqidx_reader.close()
 label_writer.close()
-        

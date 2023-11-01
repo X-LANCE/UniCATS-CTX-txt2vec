@@ -10,6 +10,12 @@ from ctx_text2vec.utils.io import load_yaml_config
 from ctx_text2vec.engine.logger import Logger
 from ctx_text2vec.engine.solver import Solver
 from ctx_text2vec.distributed.launch import launch
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s (%(module)s:%(lineno)d) %(levelname)s: %(message)s",
+)
 
 # environment variables
 NODE_RANK = os.environ['AZ_BATCHAI_TASK_INDEX'] if 'AZ_BATCHAI_TASK_INDEX' in os.environ else 0
@@ -148,7 +154,7 @@ def main_worker(local_rank, args):
     solver = Solver(config=config, args=args, model=model, dataloader=dataloader_info, logger=logger)
 
     # resume 
-    if args.load_path is not None:  # only load the model paramters
+    if args.load_path is not None:  # only load the model parameters
         solver.resume(path=args.load_path,
                       # load_model=True,
                       load_optimizer_and_scheduler=False,

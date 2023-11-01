@@ -5,8 +5,8 @@ import numpy as np
 import sys
 
 dict_path = sys.argv[1]
-label_rspecifier= sys.argv[2]
-vqidx_wspecifier= sys.argv[3]
+label_rspecifier = sys.argv[2]
+vqidx_wspecifier = sys.argv[3]
 
 label2vqidx = {}
 with open(dict_path, 'r') as f:

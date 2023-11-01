@@ -153,3 +153,5 @@ cython_debug/
 .DS_Store
 OUTPUT/
 data/
+feats/
+*zip

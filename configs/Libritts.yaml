@@ -1,4 +1,3 @@
-# Finetune VQ-Diffusion-F on coco dataset
 model:
   target: ctx_text2vec.modeling.models.text2vec.Text2Vec
   params:
@@ -36,7 +35,7 @@ solver:
   max_epochs: 500
   save_epochs: 1
   validation_epochs: 10
-  sample_iterations: epoch  # epoch #30000      # how many iterations to perform sampling once ?
+  sample_iterations: epoch
   print_specific_things: True
 
   # config for ema
@@ -78,8 +77,14 @@ dataloader:
       params:
         data_root: data/train_all
         lexicon_path: data/lang_1phn/train_all_units.txt
+        max_seconds: 32
+        min_seconds: 5  # utterances within this range will be considered for training
+        input_hz: 100  # how many frames in a seconds. For vq-wav2vec (10ms), it is 100 frames.
   validation_datasets:
     - target: ctx_text2vec.data.tts_dataset.TTSDataset
       params:
         data_root: data/dev_all
         lexicon_path: data/lang_1phn/train_all_units.txt
+        max_seconds: 32
+        min_seconds: 5
+        input_hz: 100
