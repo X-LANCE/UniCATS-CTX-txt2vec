@@ -1,36 +1,10 @@
 # Finetune VQ-Diffusion-F on coco dataset
 model:
-  target: ctx_text2vec.modeling.models.dalle.DALLE
+  target: ctx_text2vec.modeling.models.text2vec.Text2Vec
   params:
-#    content_info: {key: image}
-#    condition_info: {key: text}
-#    content_codec_config:
-#    # target: ctx_text2vec.modeling.codecs.image_codec.openai_dvae.OpenAIDiscreteVAE
-#      target: ctx_text2vec.modeling.codecs.image_codec.taming_gumbel_vqvae.TamingGumbelVQVAE
-#      params:
-#        trainable: False
-#        token_shape: [32, 32]
-#        config_path: 'OUTPUT/pretrained_model/taming_dvae/taming_f8_8192_openimages.yaml'
-#        ckpt_path: 'OUTPUT/pretrained_model/taming_dvae/taming_f8_8192_openimages_last.pth'
-#        num_tokens: 8192
-#        quantize_number: 2887
-#        mapping_path: './help_folder/statistics/taming_vqvae_2887.pt'
-#        # return_logits: True
-#    condition_codec_config:
-#      target: ctx_text2vec.modeling.codecs.text_codec.tokenize.Tokenize
-#      params:
-#       context_length: 77     ############# 77 for clip_backup and 256 for dalle
-#       add_start_and_end: True
-#       with_mask: True
-#       pad_value: 0 # 0 for clip_backup embedding and -100 for others
-#       clip_embedding: False     ############################   if we use clip_backup embedding
-#       tokenizer_config:
-#        target: ctx_text2vec.modeling.modules.clip_backup.simple_tokenizer.SimpleTokenizer   #########
-#        params:
-#          end_idx: 49152                              ###################
+
     diffusion_config:      
-    # target: ctx_text2vec.modeling.transformers.gpt_like_transformer.GPTLikeTransformer
-      target: ctx_text2vec.modeling.transformers.diffusion_transformer.DiffusionTransformer
+      target: ctx_text2vec.modeling.transformers.text2vec_transformer.Text2VecTransformer
       params:
         diffusion_step: 100
         ctt_T: 0.89999
@@ -41,7 +15,7 @@ model:
         num_cls: 23633
 
         transformer_config:
-          target: ctx_text2vec.modeling.transformers.transformer_utils.Text2VecTransformer
+          target: ctx_text2vec.modeling.transformers.transformer_utils.DiffusionTransformer
           params:
             codebook_path: feats/vqidx/codebook.npy
             label2vqidx_path: feats/vqidx/label2vqidx
@@ -55,25 +29,6 @@ model:
             block_activate: GELU2
             timestep_type: 'adalayernorm'    # adainsnorm or adalayernorm and abs
             mlp_hidden_times: 4
-
-#        condition_emb_config:
-#          target: ctx_text2vec.modeling.embeddings.clip_text_embedding.CLIPTextEmbedding
-#          params:
-#            clip_name: 'ViT-B/32'
-#            num_embed: 49408 # 49152+256
-#            normalize: True
-#            pick_last_embedding: False   # if True same as clip_backup but we need embedding of each word
-#            keep_seq_len_dim: False
-#            additional_last_embedding: False
-#            embed_dim: 512
-#        content_emb_config:
-#          target: ctx_text2vec.modeling.embeddings.dalle_mask_image_embedding.DalleMaskImageEmbedding
-#          params:
-#            num_embed: 2887
-#            spatial_size: !!python/tuple [32, 32]
-#            embed_dim: 1024
-#            trainable: True
-#            pos_emb_type: embedding
 
 solver:
   base_lr: 3.0e-6
@@ -103,11 +58,7 @@ solver:
       params: 
         betas: !!python/tuple [0.9, 0.96]
         weight_decay: 4.5e-2
-            # target: ZeroRedundancyOptimizer
-            # optimizer_class: torch.optim.AdamW
-            # params:
-            # betas: !!python/tuple [0.9, 0.96]
-            # weight_decay: 4.5e-2
+
     scheduler:
       step_iteration: 1
       target: ctx_text2vec.engine.lr_scheduler.ReduceLROnPlateauWithWarmup
@@ -121,8 +72,7 @@ solver:
         warmup: 1000 
 
 dataloader:
-#  data_root: datasets/MSCOCO_Caption
-#  batch_max_tokens: 10400
+
   batch_max_tokens: 3600
   num_workers: 3
   train_datasets: # a list of configures, so we can combine several schedulers

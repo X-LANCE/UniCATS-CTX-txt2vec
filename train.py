@@ -1,10 +1,3 @@
-# ------------------------------------------
-# VQ-Diffusion
-# Copyright (c) Microsoft Corporation.
-# Licensed under the MIT License.
-# written By Shuyang Gu
-# ------------------------------------------
-
 import argparse
 import os
 import warnings

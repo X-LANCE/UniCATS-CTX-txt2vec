@@ -13,7 +13,6 @@ for x in ${train_set} ${dev_set} ${eval_set} ; do
     cp ${featdir}/label/${x}/feats.scp data/${x}/feats.scp
 done
 
-source activate ~/tools/anaconda3/envs/vqdiffusion
 python train.py --name Libritts --config_file configs/Libritts.yaml --num_node 1 --tensorboard --auto_resume
 
 python continuation.py
@@ -24,4 +23,4 @@ voc_dir=/mnt/lustre/sjtu/home/cpd30/tools/ParallelWaveGAN/egs/libritts/v2w2
 
 awk 'NR==FNR{a[$1]=$2}NR>FNR{printf("%s %s\n", $1, a[$2])}' feats/normed_fbank/${eval_set}/feats.scp data/${eval_set}/utt2prompt_subset > ${eval_dir}/prompt.scp
 cd ${voc_dir} || exit
-bash local/generate.sh --conf conf/hifigan.v1.yaml --eval_dir ${eval_dir}
+bash local/generate.sh --conf conf/hifigan.v1.yaml --eval_dir "${eval_dir}"
