@@ -37,18 +37,21 @@ Here we take the LibriTTS preparation pipeline for example. Other datasets can b
     ```
 2. Here, the `feats.scp` is the Kaldi-style feature specifier pointing to `feats/label/.../feats.ark`.
    We also provide it [online (432MB)](https://huggingface.co/datasets/cantabile-kwok/libritts-all-kaldi-data/resolve/main/feats_ctxt2v.zip), so please download it and unzip to `feats` in the project directory.
-   These features are the 1-D flatten indexes of the vq-wav2vec features. You can verify the shape of features by `utils/feat-to-shape.py scp:feats/label/dev_all/feats.scp | head`.
+   These features are the 1-D flatten indexes of the vq-wav2vec features. You can verify the shape of features by `utils/feat-to-shape.py scp:feats/label/dev_all/feats.scp | head`. The codebook `feats/vqidx/codebook.npy` has shape `[2, 320, 256]`.
 > 💡 That is, we extracted discrete codebook indxes using [fairseq's vq-wav2vec model](https://github.com/facebookresearch/fairseq/tree/main/examples/wav2vec#vq-wav2vec) which contained 2 groups of integer indexes each ranging from 0 to 319.
    We then find the occurrences of these pairs and label them using another index, which counts to 23632. The mapping between this label index and original vq-wav2vec codebook index can be found at `feats/vqidx/label2vqidx`. We use the 23632 labels to train the VQ-diffusion model.
 
 After constructing the directories properly, the model can be trained.
 
 ## Training
-**Working in progress**
+
+Training the CTX-text2vec model can be simply done by
 
 ```shell
 python train.py --name Libritts --config_file configs/Libritts.yaml --num_node 1 --tensorboard --auto_resume
 ```
+where `--name` specifies the output directory name. Check out `configs/Libritts.yaml` for detailed configurations.
+After the training starts, checkpoints and logs will be saved in `OUTPUT/Libritts`.
 
 ## Decoding to VQ indexes
 **Working in progress**
