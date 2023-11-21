@@ -1,5 +1,5 @@
-# CTX-text2vec, the Acoustic Model with Contextual VQ-Diffusion
-> This is the official implementation of **CTX-text2vec** TTS model in the paper [UniCATS: A Unified Context-Aware Text-to-Speech Framework with Contextual VQ-Diffusion and Vocoding](https://arxiv.org/abs/2306.07547).
+# CTX-txt2vec, the Acoustic Model with Contextual VQ-Diffusion
+> This is the official implementation of **CTX-txt2vec** TTS model in the paper [UniCATS: A Unified Context-Aware Text-to-Speech Framework with Contextual VQ-Diffusion and Vocoding](https://arxiv.org/abs/2306.07547).
 
 ![main](asset/main.png)
 
@@ -45,7 +45,7 @@ After constructing the directories properly, the model can be trained.
 
 ## Training
 
-Training the CTX-text2vec model can be simply done by
+Training the CTX-txt2vec model can be simply done by
 
 ```shell
 python train.py --name Libritts --config_file configs/Libritts.yaml --num_node 1 --tensorboard --auto_resume
@@ -54,7 +54,7 @@ where `--name` specifies the output directory name. Check out `configs/Libritts.
 After the training starts, checkpoints and logs will be saved in `OUTPUT/Libritts`.
 
 ## Decoding to VQ indexes
-The decoding of CTX-text2vec always rely on prompts that provide contextual information. In other words, before decoding, there should be a `utt2prompt` file that looks like:
+The decoding of CTX-txt2vec always rely on prompts that provide contextual information. In other words, before decoding, there should be a `utt2prompt` file that looks like:
 ```text
 1089_134686_000002_000001 1089_134686_000032_000008
 1089_134686_000007_000005 1089_134686_000032_000008
