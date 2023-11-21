@@ -17,7 +17,8 @@ logging.basicConfig(
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--eval-set", default="eval_clean", type=str, help="A data set directory in `data/`")
+    parser.add_argument("--eval-set", default="eval_clean", type=str, help="A data set directory in `data/`. "
+                                                                           "This should contain text, duration, feats.scp, utt2prompt files.")
     parser.add_argument("--expdir", default='OUTPUT/Libritts', type=str, help="model training directory")
     parser.add_argument("--device", default="cuda", type=str)
     args = parser.parse_args()
@@ -27,7 +28,7 @@ if __name__ == '__main__':
     config = load_yaml_config(f'{expdir}/configs/config.yaml')
     model = build_model(config).to(device)
     ckpt = torch.load(f"{expdir}/checkpoint/last.pth")
-    outdir = f"{expdir}/syn/{eval_set}/feats"
+    outdir = f"{expdir}/syn/{eval_set}/"
     model.load_state_dict(ckpt["model"])
 
     lexicon = {}
@@ -70,10 +71,10 @@ if __name__ == '__main__':
 
     if not os.path.exists(outdir):
         os.makedirs(outdir)
-    feat_writer = kaldiio.WriteHelper("ark,scp:{o}.ark,{o}.scp".format(o=os.path.join(os.getcwd(), f"{outdir}/feats")))
+    feat_writer = kaldiio.WriteHelper("ark,scp:{o}.ark,{o}.scp".format(o=os.path.join(os.getcwd(), f"{outdir}/feat")))
     logging.info(f"Writing location: {outdir}/feats.scp")
 
-    with open(f"data/{eval_set}/utt2prompt_subset") as f:
+    with open(f"data/{eval_set}/utt2prompt") as f:
         f_lines = f.readlines()
         logging.info(f"Number of text to be synthesized: {len(f_lines)}")
         logging.info("Decoding starts...")
