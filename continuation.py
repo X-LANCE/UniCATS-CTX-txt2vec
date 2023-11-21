@@ -71,7 +71,7 @@ if __name__ == '__main__':
 
     if not os.path.exists(outdir):
         os.makedirs(outdir)
-    feat_writer = kaldiio.WriteHelper("ark,scp:{o}.ark,{o}.scp".format(o=os.path.join(os.getcwd(), f"{outdir}/feat")))
+    feat_writer = kaldiio.WriteHelper("ark,scp:{o}.ark,{o}.scp".format(o=os.path.join(os.getcwd(), f"{outdir}/feats")))
     logging.info(f"Writing location: {outdir}/feats.scp")
 
     with open(f"data/{eval_set}/utt2prompt") as f:
