@@ -1,5 +1,5 @@
 # CTX-txt2vec, the Acoustic Model with Contextual VQ-Diffusion
-> This is the official implementation of **CTX-txt2vec** TTS model in the paper [UniCATS: A Unified Context-Aware Text-to-Speech Framework with Contextual VQ-Diffusion and Vocoding](https://arxiv.org/abs/2306.07547).
+> This is the official implementation of **CTX-txt2vec** TTS model in the AAAI-2024 paper [UniCATS: A Unified Context-Aware Text-to-Speech Framework with Contextual VQ-Diffusion and Vocoding](https://arxiv.org/abs/2306.07547).
 
 ![main](asset/main.png)
 
