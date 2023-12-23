@@ -51,6 +51,8 @@ Training the CTX-txt2vec model can be simply done by
 python train.py --name Libritts --config_file configs/Libritts.yaml --num_node 1 --tensorboard --auto_resume
 ```
 where `--name` specifies the output directory name. Check out `configs/Libritts.yaml` for detailed configurations.
+Multi-GPU training is automatically handled by the program (default to use all visible devices).
+
 After the training starts, checkpoints and logs will be saved in `OUTPUT/Libritts`.
 
 ## Decoding to VQ indexes
