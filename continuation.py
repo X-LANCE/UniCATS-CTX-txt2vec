@@ -88,10 +88,8 @@ if __name__ == '__main__':
 
                 prefix_text = torch.LongTensor([lexicon[w] for w in utt2text[prompt].split()]).unsqueeze(0).to(device)
 
-                # duration = torch.LongTensor(utt2dur[utt]).unsqueeze(0).to(device)
                 prefix_duration = torch.LongTensor(utt2dur[prompt]).unsqueeze(0).to(device)
 
-                feat = torch.LongTensor(feats_loader[utt][:, -1].copy()).unsqueeze(0).to(device)
                 prefix_feat = torch.LongTensor(feats_loader[prompt][:, -1].copy()).unsqueeze(0).to(device)
 
                 out = model.transformer.sample(text, {'text': prefix_text, 'duration': prefix_duration, 'feat': prefix_feat})['content_token'][0]
